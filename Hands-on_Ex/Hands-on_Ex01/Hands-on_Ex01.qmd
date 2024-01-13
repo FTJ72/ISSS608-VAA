@@ -5,23 +5,126 @@ author: "FTJ72"
 
 # Getting Started
 
-# install and launching packages
-
-The code chunk below uses p_load() of pacman package
+## Installing and launching packages
 
 ```{r}
 pacman::p_load(tidyverse)
 ```
 
-Importing the data
+## Importing the data
 
 ```{r}
 exam_data <- read_csv("data/Exam_data.csv")
 ```
 
+## Graphing the Data
+
+```{r}
+#| echo: false
+ggplot(data=exam_data, 
+       aes(x = MATHS)) +
+  geom_dotplot(binwidth=2.5,         
+               dotsize = 0.5) +      
+  scale_y_continuous(NULL,           
+                     breaks = NULL) 
+```
+
 ```{r}
 #| echo: false
 ggplot(data = exam_data,
-       aes(x = RACE)) +
-  geom_bar()
+       aes(x = MATHS,
+           fill = GENDER)) +
+  geom_histogram(bins=20,
+                 color="black")
+```
+
+```{r}
+#| echo: false
+ggplot(data=exam_data, 
+       aes(x = MATHS, 
+           colour = GENDER)) +
+  geom_density()
+```
+
+```{r}
+#| echo: false
+ggplot(data=exam_data, 
+       aes(y = MATHS, 
+           x= GENDER)) +
+  geom_boxplot(notch=TRUE)
+```
+
+```{r}
+#| echo: false
+ggplot(data=exam_data, 
+       aes(y = MATHS, 
+           x= GENDER)) +
+  geom_violin()
+```
+
+```{r}
+#| echo: false
+ggplot(data=exam_data, 
+       aes(y = MATHS, 
+           x= GENDER)) +
+  geom_boxplot() +                    
+  geom_point(position="jitter", 
+             size = 0.5)    
+```
+
+```{r}
+#| echo: false
+ggplot(data=exam_data, 
+       aes(y = MATHS, x= GENDER)) +
+  geom_boxplot() +
+  geom_point(stat="summary",        
+             fun.y="mean",           
+             colour ="red",          
+             size=4)  
+```
+
+```{r}
+#| echo: false
+ggplot(data=exam_data, 
+       aes(x= MATHS, 
+           y=ENGLISH)) +
+  geom_point() +
+  geom_smooth(method=lm, 
+              size=0.5)
+```
+
+```{r}
+#| echo: false
+ggplot(data=exam_data, 
+       aes(x= MATHS)) +
+  geom_histogram(bins=20) +
+    facet_grid(~ CLASS)
+```
+
+```{r}
+#| echo: false
+ggplot(data=exam_data, 
+       aes(x=RACE)) +
+  geom_bar() +
+  coord_flip()
+```
+
+```{r}
+#| echo: false
+ggplot(data=exam_data, 
+       aes(x= MATHS, y=ENGLISH)) +
+  geom_point() +
+  geom_smooth(method=lm, 
+              size=0.5) +  
+  coord_cartesian(xlim=c(0,100),
+                  ylim=c(0,100))
+```
+
+```{r}
+#| echo: false
+ggplot(data=exam_data, 
+       aes(x=RACE)) +
+  geom_bar() +
+  coord_flip() +
+  theme_minimal()
 ```
