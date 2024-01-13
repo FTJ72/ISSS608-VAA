@@ -7,13 +7,6 @@
     "text": "Welcome to ISSS608 VAA"
   },
   {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "About this site\n\n1 + 1\n\n[1] 2"
-  },
-  {
     "objectID": "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html",
     "href": "Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html",
     "title": "Hands-on Exercise 1",
@@ -40,5 +33,26 @@
     "title": "Hands-on Exercise 1",
     "section": "",
     "text": "Warning in geom_point(stat = \"summary\", fun.y = \"mean\", colour = \"red\", :\nIgnoring unknown parameters: `fun.y`\n\n\nNo summary function supplied, defaulting to `mean_se()`\n\n\n\n\n\n\n\nWarning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.\nℹ Please use `linewidth` instead.\n\n\n`geom_smooth()` using formula = 'y ~ x'\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n`geom_smooth()` using formula = 'y ~ x'"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this site\n\n1 + 1\n\n[1] 2"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html",
+    "title": "In-class Exercise 1: Now You See It!",
+    "section": "",
+    "text": "In this hands-on exercise, two R packages will be used. They are:\n\ntidyverse, and\nhaven\n\nThe code chunk used is as follows:\n\npacman::p_load(tidyverse,haven)\n\n##Importing PISA Data\nThe code chunk below uses ‘read_sas()’ of haven to import PISA data into the R environment.\n\nstu_qqq &lt;- read_sas(\"data/cy08msp_stu_qqq.sas7bdat\")"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#loading-r-packages",
+    "href": "In-class_Ex/In-class_Ex01/In-class_Ex01.html#loading-r-packages",
+    "title": "In-class Exercise 1: Now You See It!",
+    "section": "",
+    "text": "In this hands-on exercise, two R packages will be used. They are:\n\ntidyverse, and\nhaven\n\nThe code chunk used is as follows:\n\npacman::p_load(tidyverse,haven)\n\n##Importing PISA Data\nThe code chunk below uses ‘read_sas()’ of haven to import PISA data into the R environment.\n\nstu_qqq &lt;- read_sas(\"data/cy08msp_stu_qqq.sas7bdat\")"
   }
 ]
