@@ -1,0 +1,27 @@
+---
+title: "Hands-on Exercise 1"
+author: "FTJ72"
+---
+
+# Getting Started
+
+# install and launching packages
+
+The code chunk below uses p_load() of pacman package
+
+```{r}
+pacman::p_load(tidyverse)
+```
+
+Importing the data
+
+```{r}
+exam_data <- read_csv("data/Exam_data.csv")
+```
+
+```{r}
+#| echo: false
+ggplot(data = exam_data,
+       aes(x = RACE)) +
+  geom_bar()
+```
