@@ -1,0 +1,138 @@
+---
+title: "Take-home Exercise 1: Creating Data Visualization Beyond Default"
+date: "January 17, 2024"
+date-modified: "last-modified"
+execute:
+  eval: true
+  echo: true
+  warning: false
+editor: visual
+---
+
+# Project Brief
+
+Brief Here
+
+# Project Objectives
+
+Objectives here
+
+# 1: Data Preparation
+
+## 1.1: Installing R Packages
+
+In this hands-on exercise, two R packages will be used. They are:
+
+-   [tidyverse](https://www.tidyverse.org),
+
+-   [haven](https://haven.tidyverse.org), and
+
+-   ggplot2
+
+The code chunk used is as follows:
+
+```{r}
+pacman::p_load(tidyverse,haven,ggplot2)
+```
+
+## 1.2: Data Sets
+
+The code chunk below uses ['read_sas()'](https://haven.tidyverse.org/reference/read_sas.html) of [haven](https://haven.tidyverse.org) to import PISA data into the R environment.
+
+```{r}
+#| eval: false
+stu_qqq <- read_sas("data/cy08msp_stu_qqq.sas7bdat")
+```
+
+```{r}
+#| eval: false
+stu_qqq_SG <- stu_qqq %>%
+  filter(CNT == "SGP")
+```
+
+```{r}
+#| eval: false
+write_rds(stu_qqq_SG,
+          "data/stu_qqq_SG.rds")
+```
+
+```{r}
+stu_qqq_SG <- read_rds("data/stu_qqq_SG.rds")
+```
+
+Given that the data was restricted to only Singaporean students, numerous columns have uniform values. These columns do not provide any useful information to the task at hand and can thus be filtered out using the code chunk below.
+
+```{r}
+library(dplyr)
+stu_qqq_SG_filtered <- stu_qqq_SG %>%
+  select_if(function(x) !all(x == x[1]))
+```
+
+```{r}
+write_rds(stu_qqq_SG_filtered,
+          "data/stu_qqq_SG_filtered.rds")
+```
+
+```{r}
+stu_qqq_SG_filtered <- read_rds("data/stu_qqq_SG_filtered.rds")
+```
+
+## 1.2.1: Summary Statistics of Data
+
+```{r}
+stu_qqq_SG[duplicated(stu_qqq_SG),]
+```
+
+```{r}
+str(stu_qqq_SG)
+```
+
+```{r}
+view(stu_qqq_SG_filtered)
+```
+
+```{r}
+# Assuming stu_qqq_SG_filtered is your dataset
+library(tidyverse)
+
+# Add a new column with the row-wise average of PV1MATH to PV10MATH and rename it to MATH_Score
+stu_qqq_SG_filtered <- stu_qqq_SG_filtered %>%
+  mutate(MATH_Score = rowMeans(select(., PV1MATH:PV10MATH), na.rm = TRUE))
+```
+
+```{r}
+# Assuming stu_qqq_SG_filtered is your dataset
+library(tidyverse)
+
+# Add a new column with the row-wise average of PV1MATH to PV10MATH and rename it to MATH_Score
+stu_qqq_SG_filtered <- stu_qqq_SG_filtered %>%
+  mutate(READ_Score = rowMeans(select(., PV1READ:PV10READ), na.rm = TRUE))
+```
+
+```{r}
+# Assuming stu_qqq_SG_filtered is your dataset
+library(tidyverse)
+
+# Add a new column with the row-wise average of PV1MATH to PV10MATH and rename it to MATH_Score
+stu_qqq_SG_filtered <- stu_qqq_SG_filtered %>%
+  mutate(SCIE_Score = rowMeans(select(., PV1SCIE:PV10SCIE), na.rm = TRUE))
+```
+
+### Visual Summary of Data
+
+```{r}
+# Assuming stu_qqq_SG_filtered is your dataset
+library(ggplot2)
+
+# Create side-by-side box plots for MATH_Score, READ_Score, and SCIE_Score
+ggplot(stu_qqq_SG_filtered, aes(x = factor(1), y = MATH_Score, fill = "MATH_Score")) +
+  geom_boxplot(position = position_dodge(width = 0.75), alpha = 0.7) +
+  geom_boxplot(aes(x = factor(1.25), y = READ_Score, fill = "READ_Score"), position = position_dodge(width = 0.75), alpha = 0.7) +
+  geom_boxplot(aes(x = factor(1.5), y = SCIE_Score, fill = "SCIE_Score"), position = position_dodge(width = 0.75), alpha = 0.7) +
+  labs(x = NULL, y = "Score") +
+  scale_fill_manual(values = c("MATH_Score" = "blue", "READ_Score" = "green", "SCIE_Score" = "red")) +
+  theme_minimal() +
+  theme(legend.position = "top", legend.title = element_blank()) +
+  guides(fill = guide_legend(title = "Subjects"))
+
+```
