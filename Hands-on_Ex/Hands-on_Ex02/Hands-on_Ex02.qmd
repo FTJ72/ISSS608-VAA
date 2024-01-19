@@ -1,7 +1,7 @@
 ---
-title: "Hands-on_Ex02"
+title: "Hands-on_Exercise 2"
 ---
-
+Loading the packages:
 ```{r}
 pacman::p_load(ggrepel, patchwork, ggthemes, hrbrthemes, tidyverse)
 ```

@@ -11,23 +11,27 @@ editor: visual
 
 # Project Brief
 
-Brief Here
+Although Singapore has reportedly achieved a high level of education between all schools in the country, there remains a strong belief within the country that disparities still exist within the educational system. Differing factors such as being an elite or neighborhood school, socioeconomic status, gender, and many other factors may still play a vital role in a student's educational quality.
 
 # Project Objectives
 
-Objectives here
+Using the 2022 [**Programme for International Student Assessment (PISA)**](https://www.oecd.org/pisa/) data, the researcher is expected to use **Exploratory Data Analysis (EDA)** methods and ggplot2 functions to reveal:
+
+-   student performance in math, reading, and science, and
+
+-   relationships between the aforementioned grades with their schools, gender, and socioeconomic status.
 
 # 1: Data Preparation
 
 ## 1.1: Installing R Packages
 
-In this hands-on exercise, two R packages will be used. They are:
+In this task, three R packages will be used. They are:
 
 -   [tidyverse](https://www.tidyverse.org),
 
 -   [haven](https://haven.tidyverse.org), and
 
--   ggplot2
+-   [ggplot2](https://ggplot2.tidyverse.org)
 
 The code chunk used is as follows:
 
@@ -37,12 +41,14 @@ pacman::p_load(tidyverse,haven,ggplot2)
 
 ## 1.2: Data Sets
 
-The code chunk below uses ['read_sas()'](https://haven.tidyverse.org/reference/read_sas.html) of [haven](https://haven.tidyverse.org) to import PISA data into the R environment.
+The code chunk below uses ['read_sas()'](https://haven.tidyverse.org/reference/read_sas.html) of [haven](https://haven.tidyverse.org) to import the PISA data into the R environment.
 
 ```{r}
 #| eval: false
 stu_qqq <- read_sas("data/cy08msp_stu_qqq.sas7bdat")
 ```
+
+The data can then be limited to contain only Singaporean students using the following code chunks.
 
 ```{r}
 #| eval: false
@@ -60,7 +66,7 @@ write_rds(stu_qqq_SG,
 stu_qqq_SG <- read_rds("data/stu_qqq_SG.rds")
 ```
 
-Given that the data was restricted to only Singaporean students, numerous columns have uniform values. These columns do not provide any useful information to the task at hand and can thus be filtered out using the code chunk below.
+Given that the data was restricted to only Singaporean students, numerous columns have uniform values. These columns do not provide any useful information to the task at hand and can thus be filtered out using the code chunks below.
 
 ```{r}
 library(dplyr)
@@ -77,62 +83,209 @@ write_rds(stu_qqq_SG_filtered,
 stu_qqq_SG_filtered <- read_rds("data/stu_qqq_SG_filtered.rds")
 ```
 
+This provides a data set called "stu_qqq_SG_filtered" which contains the information from PISA regarding Singaporean students and all answers wherein unique values were placed by said students.
+
+### 1.2.1: Data Wrangling
+
+There are multiple Plausible Values (PV) provided for the subjects of Math, Reading and Science. The mean of the PVs can be used to obtain an estimate for the student's performance in the respective subjects.
+
+The code chunk below is used to obtain the means of the data:
+
+```{r}
+stu_qqq_SG_filtered <- stu_qqq_SG_filtered %>%
+  mutate(
+    MATH_Score = rowMeans(select(., PV1MATH:PV10MATH), na.rm = TRUE),
+    READ_Score = rowMeans(select(., PV1READ:PV10READ), na.rm = TRUE),
+    SCIE_Score = rowMeans(select(., PV1SCIE:PV10SCIE), na.rm = TRUE)
+  )
+```
+
+Observing the question for gender, responses are written in the form of 1 (Female), and 2 (Male). A new column called "Gender" can be created which converts the numeric values to their respective text responses using the code chunk below:
+
+```{r}
+stu_qqq_SG_filtered <- stu_qqq_SG_filtered %>%
+  mutate(Gender = ifelse(ST004D01T == 1, "Female", "Male"))
+```
+
+The schools are currently seen as numbers, these must be converted into characters using the following code chunk:
+
+```{r}
+stu_qqq_SG_filtered <- stu_qqq_SG_filtered %>%
+  mutate(CNTSCHID = as.character(CNTSCHID))
+```
+
+There is a question that asks about the family's economic standing (ST259Q01JA). Unfortunately, this part of the data set is filled with NA as a response and therefore cannot be used. The next closest question that is available is question ST258 which asks about how often the student could not eat due to not having enough funds to buy food. The responses are currently read as numbers but can be converted into characters using a similar code chunk as the previous.
+
+```{r}
+stu_qqq_SG_filtered <- stu_qqq_SG_filtered %>%
+  mutate(ST258Q01JA = as.character(ST258Q01JA))
+```
+
 ## 1.2.1: Summary Statistics of Data
 
-```{r}
-stu_qqq_SG[duplicated(stu_qqq_SG),]
-```
+The following code chunk checks if there is any duplicate data found within the data set.
 
 ```{r}
-str(stu_qqq_SG)
+stu_qqq_SG_filtered[duplicated(stu_qqq_SG_filtered),]
 ```
+
+### Data Visualization
+
+Below is an overview of the scores of the students from each subject area.
 
 ```{r}
-view(stu_qqq_SG_filtered)
+Math_Grade <- ggplot(data = stu_qqq_SG_filtered,
+       aes (x = 1, y = MATH_Score))+
+  geom_boxplot(notch=TRUE)+
+  stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
+  ggtitle("Boxplot of Math Scores")+
+  theme_hc()+
+  coord_cartesian(ylim = c(100, 900))+
+  scale_y_continuous(breaks = seq(100, 900, by = 100))+
+  theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())
+
+Read_Grade <- ggplot(data = stu_qqq_SG_filtered,
+       aes (x = 1, y = READ_Score))+
+  geom_boxplot(notch=TRUE)+
+  stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
+  ggtitle("Boxplot of Reading Scores")+
+  theme_hc()+
+  coord_cartesian(ylim = c(100, 900))+
+  scale_y_continuous(breaks = seq(100, 900, by = 100))+
+  theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())
+
+Scie_Grade <- ggplot(data = stu_qqq_SG_filtered,
+       aes (x = 1, y = SCIE_Score))+
+  geom_boxplot(notch=TRUE)+
+  stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
+  ggtitle("Boxplot of Science Scores")+
+  theme_hc()+
+  coord_cartesian(ylim = c(100, 900))+
+  scale_y_continuous(breaks = seq(100, 900, by = 100))+
+  theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())
+
+Math_Grade+Read_Grade+Scie_Grade
 ```
+
+The following graph shows the difference in scores per subject based on the student's gender.
 
 ```{r}
-# Assuming stu_qqq_SG_filtered is your dataset
-library(tidyverse)
+Math_Gender <- ggplot(data = stu_qqq_SG_filtered,
+       aes (x = Gender, y = MATH_Score))+
+  geom_boxplot(notch=TRUE)+
+  stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
+  ggtitle("Math Scores by Gender")+
+  theme_hc()+
+  coord_cartesian(ylim = c(100, 900))+
+  scale_y_continuous(breaks = seq(100, 900, by = 100))+
+  theme(axis.ticks.x = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())
 
-# Add a new column with the row-wise average of PV1MATH to PV10MATH and rename it to MATH_Score
-stu_qqq_SG_filtered <- stu_qqq_SG_filtered %>%
-  mutate(MATH_Score = rowMeans(select(., PV1MATH:PV10MATH), na.rm = TRUE))
+Read_Gender <- ggplot(data = stu_qqq_SG_filtered,
+       aes (x = Gender, y = READ_Score))+
+  geom_boxplot(notch=TRUE)+
+  stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
+  ggtitle("Reading Scores by Gender")+
+  theme_hc()+
+  coord_cartesian(ylim = c(100, 900))+
+  scale_y_continuous(breaks = seq(100, 900, by = 100))+
+  theme(axis.ticks.x = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())
+
+Scie_Gender <- ggplot(data = stu_qqq_SG_filtered,
+       aes (x = Gender, y = SCIE_Score))+
+  geom_boxplot(notch=TRUE)+
+  stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
+  ggtitle("Science Scores by Gender")+
+  theme_hc()+
+  coord_cartesian(ylim = c(100, 900))+
+  scale_y_continuous(breaks = seq(100, 900, by = 100))+
+  theme(axis.ticks.x = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())
+  
+Math_Gender+Read_Gender+Scie_Gender
 ```
+
+The following graph shows the range of the average score per subject per school.
 
 ```{r}
-# Assuming stu_qqq_SG_filtered is your dataset
-library(tidyverse)
+Get_School <- stu_qqq_SG_filtered
 
-# Add a new column with the row-wise average of PV1MATH to PV10MATH and rename it to MATH_Score
-stu_qqq_SG_filtered <- stu_qqq_SG_filtered %>%
-  mutate(READ_Score = rowMeans(select(., PV1READ:PV10READ), na.rm = TRUE))
+By_School <- Get_School %>%
+  group_by(CNTSCHID) %>%
+  summarize(
+    Avg_Math = mean(MATH_Score, na.rm = TRUE),
+    Avg_Read = mean(READ_Score, na.rm = TRUE),
+    Avg_Scie = mean(SCIE_Score, na.rm = TRUE)
+  )
+
+Math_School <- ggplot(data = By_School,
+                      aes(x = factor(1), y = Avg_Math)) +
+  geom_boxplot(notch = TRUE) +
+  stat_summary(geom = "point", fun.y = "mean", colour = "maroon", size = 2) +
+  ggtitle("Math Scores by School") +
+  theme_hc() +
+  coord_cartesian(ylim = c(100, 900)) +
+  scale_y_continuous(breaks = seq(100, 900, by = 100)) +
+  theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())
+
+Read_School <- ggplot(data = By_School,
+                      aes(x = factor(1), y = Avg_Read)) +
+  geom_boxplot(notch = TRUE) +
+  stat_summary(geom = "point", fun.y = "mean", colour = "maroon", size = 2) +
+  ggtitle("Reading Scores by School") +
+  theme_hc() +
+  coord_cartesian(ylim = c(100, 900)) +
+  scale_y_continuous(breaks = seq(100, 900, by = 100)) +
+  theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())
+
+Scie_School <- ggplot(data = By_School,
+                      aes(x = factor(1), y = Avg_Scie)) +
+  geom_boxplot(notch = TRUE) +
+  stat_summary(geom = "point", fun.y = "mean", colour = "maroon", size = 2) +
+  ggtitle("Science Scores by School") +
+  theme_hc() +
+  coord_cartesian(ylim = c(100, 900)) +
+  scale_y_continuous(breaks = seq(100, 900, by = 100)) +
+  theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())
+
+Math_School+Read_School+Scie_School
+
 ```
+
+The final graph shows the difference in scores per subject based on the student's food security.
 
 ```{r}
-# Assuming stu_qqq_SG_filtered is your dataset
-library(tidyverse)
+Math_Wealth <- ggplot(data = stu_qqq_SG_filtered,
+       aes (x = ST258Q01JA, y = MATH_Score))+
+  geom_boxplot(notch=TRUE)+
+  stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
+  ggtitle("Math Scores by Food Security")+
+  theme_hc()+
+  coord_cartesian(ylim = c(100, 900))+
+  scale_y_continuous(breaks = seq(100, 900, by = 100))+
+  theme(axis.ticks.x = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())
 
-# Add a new column with the row-wise average of PV1MATH to PV10MATH and rename it to MATH_Score
-stu_qqq_SG_filtered <- stu_qqq_SG_filtered %>%
-  mutate(SCIE_Score = rowMeans(select(., PV1SCIE:PV10SCIE), na.rm = TRUE))
+Read_Wealth <- ggplot(data = stu_qqq_SG_filtered,
+       aes (x = ST258Q01JA, y = READ_Score))+
+  geom_boxplot(notch=TRUE)+
+  stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
+  ggtitle("Reading Scores by Food Security")+
+  theme_hc()+
+  coord_cartesian(ylim = c(100, 900))+
+  scale_y_continuous(breaks = seq(100, 900, by = 100))+
+  theme(axis.ticks.x = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())
+
+Scie_Wealth <- ggplot(data = stu_qqq_SG_filtered,
+       aes (x = ST258Q01JA, y = SCIE_Score))+
+  geom_boxplot(notch=TRUE)+
+  stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
+  ggtitle("Science Scores by Food Security")+
+  theme_hc()+
+  coord_cartesian(ylim = c(100, 900))+
+  scale_y_continuous(breaks = seq(100, 900, by = 100))+
+  theme(axis.ticks.x = element_blank(),axis.title.x = element_blank(),axis.title.y = element_blank())
+  
+Math_Wealth+Read_Wealth+Scie_Wealth
 ```
 
-### Visual Summary of Data
+# Insights
 
-```{r}
-# Assuming stu_qqq_SG_filtered is your dataset
-library(ggplot2)
-
-# Create side-by-side box plots for MATH_Score, READ_Score, and SCIE_Score
-ggplot(stu_qqq_SG_filtered, aes(x = factor(1), y = MATH_Score, fill = "MATH_Score")) +
-  geom_boxplot(position = position_dodge(width = 0.75), alpha = 0.7) +
-  geom_boxplot(aes(x = factor(1.25), y = READ_Score, fill = "READ_Score"), position = position_dodge(width = 0.75), alpha = 0.7) +
-  geom_boxplot(aes(x = factor(1.5), y = SCIE_Score, fill = "SCIE_Score"), position = position_dodge(width = 0.75), alpha = 0.7) +
-  labs(x = NULL, y = "Score") +
-  scale_fill_manual(values = c("MATH_Score" = "blue", "READ_Score" = "green", "SCIE_Score" = "red")) +
-  theme_minimal() +
-  theme(legend.position = "top", legend.title = element_blank()) +
-  guides(fill = guide_legend(title = "Subjects"))
-
-```
+Looking through the graphs, it can be seen that there are still noticeable differences in the performance of students based off of certain factors. When looking at gender differences, the performance of female and male students appear to be equal in all subjects but reading wherein female students slightly outperform male students. Looking at the schools, while most schools are able to stay within a tight range in the box plots, there are outlier schools where students vastly outperform their peers while there are also a handful of schools where students are under performing. This shows that there are still schools which provide different levels of education for their students although they are the exception rather than the norm. Finally, food security shows the most evident difference in performance based on the level of security. Students who are able to eat regularly are able to perform well while those who are unable to consistently eat have average scores that are sometimes 100 points below their peers.
