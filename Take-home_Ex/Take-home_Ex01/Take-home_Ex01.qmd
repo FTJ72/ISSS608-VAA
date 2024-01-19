@@ -134,11 +134,13 @@ stu_qqq_SG_filtered[duplicated(stu_qqq_SG_filtered),]
 Below is an overview of the scores of the students from each subject area.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 Math_Grade <- ggplot(data = stu_qqq_SG_filtered,
        aes (x = 1, y = MATH_Score))+
   geom_boxplot(notch=TRUE)+
   stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
-  ggtitle("Boxplot of Math Scores")+
+  ggtitle("Math Scores")+
   theme_classic()+
   coord_cartesian(ylim = c(100, 900))+
   scale_y_continuous(breaks = seq(100, 900, by = 100))+
@@ -148,7 +150,7 @@ Read_Grade <- ggplot(data = stu_qqq_SG_filtered,
        aes (x = 1, y = READ_Score))+
   geom_boxplot(notch=TRUE)+
   stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
-  ggtitle("Boxplot of Reading Scores")+
+  ggtitle("Reading Scores")+
   theme_classic()+
   coord_cartesian(ylim = c(100, 900))+
   scale_y_continuous(breaks = seq(100, 900, by = 100))+
@@ -158,7 +160,7 @@ Scie_Grade <- ggplot(data = stu_qqq_SG_filtered,
        aes (x = 1, y = SCIE_Score))+
   geom_boxplot(notch=TRUE)+
   stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
-  ggtitle("Boxplot of Science Scores")+
+  ggtitle("Science Scores")+
   theme_classic()+
   coord_cartesian(ylim = c(100, 900))+
   scale_y_continuous(breaks = seq(100, 900, by = 100))+
@@ -171,11 +173,13 @@ print(combined_plots)
 The following graph shows the difference in scores per subject based on the student's gender.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 Math_Gender <- ggplot(data = stu_qqq_SG_filtered,
        aes (x = Gender, y = MATH_Score))+
   geom_boxplot(notch=TRUE)+
   stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
-  ggtitle("Math Scores by Gender")+
+  ggtitle("Math by Gender")+
   theme_classic()+
   coord_cartesian(ylim = c(100, 900))+
   scale_y_continuous(breaks = seq(100, 900, by = 100))+
@@ -185,7 +189,7 @@ Read_Gender <- ggplot(data = stu_qqq_SG_filtered,
        aes (x = Gender, y = READ_Score))+
   geom_boxplot(notch=TRUE)+
   stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
-  ggtitle("Reading Scores by Gender")+
+  ggtitle("Reading by Gender")+
   theme_classic()+
   coord_cartesian(ylim = c(100, 900))+
   scale_y_continuous(breaks = seq(100, 900, by = 100))+
@@ -195,7 +199,7 @@ Scie_Gender <- ggplot(data = stu_qqq_SG_filtered,
        aes (x = Gender, y = SCIE_Score))+
   geom_boxplot(notch=TRUE)+
   stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
-  ggtitle("Science Scores by Gender")+
+  ggtitle("Science by Gender")+
   theme_classic()+
   coord_cartesian(ylim = c(100, 900))+
   scale_y_continuous(breaks = seq(100, 900, by = 100))+
@@ -207,6 +211,8 @@ Math_Gender+Read_Gender+Scie_Gender
 The following graph shows the range of the average score per subject per school.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 Get_School <- stu_qqq_SG_filtered
 
 By_School <- Get_School %>%
@@ -221,7 +227,7 @@ Math_School <- ggplot(data = By_School,
                       aes(x = factor(1), y = Avg_Math)) +
   geom_boxplot(notch = TRUE) +
   stat_summary(geom = "point", fun.y = "mean", colour = "maroon", size = 2) +
-  ggtitle("Math Scores by School") +
+  ggtitle("Math by School") +
   theme_classic() +
   coord_cartesian(ylim = c(100, 900)) +
   scale_y_continuous(breaks = seq(100, 900, by = 100)) +
@@ -231,7 +237,7 @@ Read_School <- ggplot(data = By_School,
                       aes(x = factor(1), y = Avg_Read)) +
   geom_boxplot(notch = TRUE) +
   stat_summary(geom = "point", fun.y = "mean", colour = "maroon", size = 2) +
-  ggtitle("Reading Scores by School") +
+  ggtitle("Reading by School") +
   theme_classic() +
   coord_cartesian(ylim = c(100, 900)) +
   scale_y_continuous(breaks = seq(100, 900, by = 100)) +
@@ -241,7 +247,7 @@ Scie_School <- ggplot(data = By_School,
                       aes(x = factor(1), y = Avg_Scie)) +
   geom_boxplot(notch = TRUE) +
   stat_summary(geom = "point", fun.y = "mean", colour = "maroon", size = 2) +
-  ggtitle("Science Scores by School") +
+  ggtitle("Science by School") +
   theme_classic() +
   coord_cartesian(ylim = c(100, 900)) +
   scale_y_continuous(breaks = seq(100, 900, by = 100)) +
@@ -254,11 +260,13 @@ Math_School+Read_School+Scie_School
 The final graph shows the difference in scores per subject based on the student's food security.
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 Math_Wealth <- ggplot(data = stu_qqq_SG_filtered,
        aes (x = ST258Q01JA, y = MATH_Score))+
   geom_boxplot(notch=TRUE)+
   stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
-  ggtitle("Math Scores by Food Security")+
+  ggtitle("Math by Food Security")+
   theme_classic()+
   coord_cartesian(ylim = c(100, 900))+
   scale_y_continuous(breaks = seq(100, 900, by = 100))+
@@ -268,7 +276,7 @@ Read_Wealth <- ggplot(data = stu_qqq_SG_filtered,
        aes (x = ST258Q01JA, y = READ_Score))+
   geom_boxplot(notch=TRUE)+
   stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
-  ggtitle("Reading Scores by Food Security")+
+  ggtitle("Reading by Food Security")+
   theme_classic()+
   coord_cartesian(ylim = c(100, 900))+
   scale_y_continuous(breaks = seq(100, 900, by = 100))+
@@ -278,7 +286,7 @@ Scie_Wealth <- ggplot(data = stu_qqq_SG_filtered,
        aes (x = ST258Q01JA, y = SCIE_Score))+
   geom_boxplot(notch=TRUE)+
   stat_summary(geom = "point", fun.y= "mean", colour ="maroon", size=2)+
-  ggtitle("Science Scores by Food Security")+
+  ggtitle("Science by Food Security")+
   theme_classic()+
   coord_cartesian(ylim = c(100, 900))+
   scale_y_continuous(breaks = seq(100, 900, by = 100))+
