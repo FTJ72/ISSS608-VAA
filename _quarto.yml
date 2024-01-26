@@ -27,7 +27,7 @@ website:
 
 format:
   html:
-    theme: morph
+    theme: yeti
     css: styles.css
     toc: true
 
