@@ -1,0 +1,757 @@
+---
+title: "Take-home Exercise 2: DataVis Makeover"
+execute:
+  eval: true
+  echo: true
+  warning: false
+---
+
+# 1: Overview
+
+# 2: Data Preparation
+
+As the purpose of this exercise is to critique the clarity, and aesthetics of the author's graphs, the same steps used by the author for data preparation have been listed below. No new steps will be taken as this is outside the scope of the exercise.
+
+::: panel-tabset
+## Loading R packages
+
+```{r}
+pacman::p_load(tidyverse, haven, ggrepel, patchwork, ggthemes, hrbrthemes)
+```
+
+## Importing PISA data
+
+```{r}
+#| eval: false 
+stu_qqq <- read_sas("data/cy08msp_stu_qqq.sas7bdat")
+
+stu_qqq_SG <- stu_qqq %>%   
+  filter(CNT == "SGP")
+
+write_rds(stu_qqq_SG,           
+          "data/stu_qqq_SG.rds")
+```
+
+```{r}
+stu_qqq_SG <- read_rds("data/stu_qqq_SG.rds")
+```
+
+## Choosing relevant variables
+
+```{r}
+stu_qqq_eda <- stu_qqq_SG %>%
+  select(CNTSCHID,CNTSTUID,ST004D01T, PV1MATH, PV1READ, PV1SCIE, ST250Q01JA, ST250Q03JA, ST251Q07JA, ESCS)%>%
+  rename(c(Gender="ST004D01T", 
+           School_ID="CNTSCHID", 
+           Student_ID="CNTSTUID",
+           Math_Score="PV1MATH",
+           Reading_Score="PV1READ",
+           Science_Score="PV1SCIE",
+           Own_Room="ST250Q01JA",
+           Edu_App="ST250Q03JA",
+           Artwork="ST251Q07JA",
+           Socioeconomic_Stat="ESCS"))
+```
+
+## Changing Data Types
+
+```{r}
+stu_qqq_eda$School_ID = as.factor(stu_qqq_eda$School_ID)
+stu_qqq_eda$Gender = as.factor(stu_qqq_eda$Gender)
+```
+
+## Recoding Variables
+
+```{r}
+stu_qqq_eda <- stu_qqq_eda %>%
+  mutate(Gender=(recode(Gender, '1'="Female", '2'="Male")))
+
+stu_qqq_eda$Artwork <- factor(stu_qqq_eda$Artwork,
+                               levels = c(1,2,3,4),
+                               labels = c("None","One","Two","Three+"))
+stu_data_artwork <- stu_qqq_eda[!is.na(stu_qqq_eda$Artwork), ]
+
+stu_qqq_socio <- stu_qqq_eda %>%
+  select(Math_Score, Science_Score, Reading_Score, Socioeconomic_Stat) %>%
+  drop_na()
+```
+:::
+
+# 3: Visualization Critique and Remake
+
+## 3.1: Academic Performance
+
+The current version of the graph shows academic performance as seen below.
+
+::: panel-tabset
+## Mathematics
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+ggplot(data=stu_qqq_eda, 
+       aes(x=Math_Score)) +
+  geom_histogram(color= "grey10",
+           fill= '#ADD0B3') +
+  labs(x = "Math Scores",
+       y ="Number of Students",
+       title= "Distribution of Student Math Scores") +
+  geom_vline(aes(xintercept=median(stu_qqq_eda$Math_Score, na.rm = T)), 
+             color="#FFFFFF", 
+             linewidth=1, 
+             linetype="dashed") + 
+  annotate("text", 
+           x=675, 
+           y=60, 
+          label= paste("Median =", round(median(stu_qqq_eda$Math_Score, na.rm = T), 3)), 
+           color= "white", 
+           size=4,
+           ) +
+  geom_vline(aes(xintercept=mean(stu_qqq_eda$Math_Score, na.rm = T)),
+             colour="black",
+             linewidth=1,
+             linetype="dashed") +
+  annotate("text",
+           x=495,
+           y=50,
+           label=paste("Mean =", round(mean(stu_qqq_eda$Math_Score, na.rm = T), 3)),
+           color="black",
+           size=4) +
+  theme(plot.background=element_rect(fill="#f5f5f5",colour="#f5f5f5"))
+```
+
+## Reading
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+ggplot(data=stu_qqq_eda, 
+       aes(x=Reading_Score)) +
+  geom_histogram(color= "grey10",
+           fill= '#ADD0B3') +
+  labs(x= "Reading Scores",
+       y="Number of Students",
+       title= "Distribution of Student Reading Scores") +
+  geom_vline(aes(xintercept=median(stu_qqq_eda$Reading_Score, na.rm = T)), 
+             color="#FFFFFF", 
+             linewidth=1, 
+             linetype="dashed") + 
+  annotate("text", 
+           x=650, 
+           y=60, 
+           label= paste("Median =", round(median(stu_qqq_eda$Reading_Score, na.rm = T), 3)), 
+           color= "#FFFFFF", 
+           size=4) +
+  geom_vline(aes(xintercept=mean(stu_qqq_eda$Reading_Score, na.rm = T)),
+             colour="black",
+             linewidth=1,
+             linetype="dashed") +
+  annotate("text",
+           x=460,
+           y=50,
+           label=paste("Mean =", round(mean(stu_qqq_eda$Reading_Score, na.rm = T), 3)),
+           color="black",
+           size=4) +
+  theme(plot.background=element_rect(fill="#f5f5f5",colour="#f5f5f5"))
+```
+
+## Science
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+ggplot(data=stu_qqq_eda, 
+       aes(x=Science_Score)) +
+  geom_histogram(color= "grey10",
+           fill= '#ADD0B3') +
+  labs(x= "Science Scores",
+       y="Number of Students",
+       title= "Distribution of Student Science Scores") +
+  geom_vline(aes(xintercept=median(stu_qqq_eda$Science_Score, na.rm = T)), 
+             color="#FFFFFF", 
+             linewidth=1, 
+             linetype="dashed") + 
+  annotate("text", 
+           x=659, 
+           y=60, 
+           label= paste("Median =", round(median(stu_qqq_eda$Science_Score, na.rm = T), 3)), 
+           color= "#FFFFFF", 
+           size=4) +
+  geom_vline(aes(xintercept=mean(stu_qqq_eda$Science_Score, na.rm = T)),
+             colour="black",
+             linewidth=1,
+             linetype="dashed") +
+  annotate("text",
+           x=480,
+           y=50,
+           label=paste("Mean =", round(mean(stu_qqq_eda$Science_Score, na.rm = T), 3)),
+           color="black",
+           size=4) +
+  theme(plot.background=element_rect(fill="#f5f5f5",colour="#f5f5f5"))
+```
+:::
+
+### Critique
+
+**Clarity:**
+
+-   Per graph, the bin width is not set to a specific value. This makes it difficult to understand the ranges within each of the bars of the histogram. In addition, the true shape of the data cannot be seen in this style and is heavily influenced by the number of bins available.
+
+-   Given that 3 different items are being observed (Mathematics, Reading, and Science), the scale of the x and y axes should be consistent between each graph in order to more clearly see differences between each subject in terms of student performance.
+
+**Aesthetics:**
+
+-   The label for the mean is being obscured by the black lines of the histogram. It can be moved higher in the graph to prevent the lines from obscuring the letters.
+
+-   Median being written in white makes it difficult to read, changing it to a darker color could help it be more readable to viewers.
+
+-   The gray background contrasts with the white background of the website.
+
+### Recreation
+
+::: panel-tabset
+## Mathematics
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+ggplot(data=stu_qqq_eda, 
+       aes(x=Math_Score)) +
+  geom_histogram(binwidth = 20,
+                 color= "grey10",
+           fill= '#ADD0B3') +
+  labs(x = "Math Scores",
+       y ="Number of Students",
+       title= "Distribution of Student Math Scores") +
+  geom_vline(aes(xintercept=median(stu_qqq_eda$Math_Score, na.rm = T)), 
+             color="#008000", 
+             linewidth=1, 
+             linetype="dashed") + 
+  annotate("text", 
+           x=700, 
+           y=550, 
+          label= paste("Median =", round(median(stu_qqq_eda$Math_Score, na.rm = T), 3)), 
+           color= "#008000", 
+           size=4,
+           ) +
+  geom_vline(aes(xintercept=mean(stu_qqq_eda$Math_Score, na.rm = T)),
+             colour="black",
+             linewidth=1,
+             linetype="dashed") +
+  annotate("text",
+           x=450,
+           y=550,
+           label=paste("Mean =", round(mean(stu_qqq_eda$Math_Score, na.rm = T), 3)),
+           color="black",
+           size=4) +
+  theme_hc() +
+  scale_x_continuous(breaks = seq(100, 1000, 100)) +
+  scale_y_continuous(breaks = seq(0, 550, 100)) +
+  coord_cartesian(xlim = c(100, 1000), ylim = c(0, 550))
+```
+
+## Reading
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+ggplot(data=stu_qqq_eda, 
+       aes(x=Reading_Score)) +
+  geom_histogram(binwidth = 20,,
+                 color= "grey10",
+           fill= '#ADD0B3') +
+  labs(x= "Reading Scores",
+       y="Number of Students",
+       title= "Distribution of Student Reading Scores") +
+  geom_vline(aes(xintercept=median(stu_qqq_eda$Reading_Score, na.rm = T)), 
+             color="#008000", 
+             linewidth=1, 
+             linetype="dashed") + 
+  annotate("text", 
+           x=680, 
+           y=550, 
+           label= paste("Median =", round(median(stu_qqq_eda$Reading_Score, na.rm = T), 3)), 
+           color= "#008000", 
+           size=4) +
+  geom_vline(aes(xintercept=mean(stu_qqq_eda$Reading_Score, na.rm = T)),
+             colour="black",
+             linewidth=1,
+             linetype="dashed") +
+  annotate("text",
+           x=430,
+           y=550,
+           label=paste("Mean =", round(mean(stu_qqq_eda$Reading_Score, na.rm = T), 3)),
+           color="black",
+           size=4) +
+  theme_hc() +
+  scale_x_continuous(breaks = seq(100, 1000, 100)) +
+  scale_y_continuous(breaks = seq(0, 550, 100)) +
+  coord_cartesian(xlim = c(100, 1000), ylim = c(0, 550))
+```
+
+## Science
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+ggplot(data=stu_qqq_eda, 
+       aes(x=Science_Score)) +
+  geom_histogram(binwidth = 20,,
+                 color= "grey10",
+           fill= '#ADD0B3') +
+  labs(x= "Science Scores",
+       y="Number of Students",
+       title= "Distribution of Student Science Scores") +
+  geom_vline(aes(xintercept=median(stu_qqq_eda$Science_Score, na.rm = T)), 
+             color="#008000", 
+             linewidth=1, 
+             linetype="dashed") + 
+  annotate("text", 
+           x=700, 
+           y=550, 
+           label= paste("Median =", round(median(stu_qqq_eda$Science_Score, na.rm = T), 3)), 
+           color= "#008000", 
+           size=4) +
+  geom_vline(aes(xintercept=mean(stu_qqq_eda$Science_Score, na.rm = T)),
+             colour="black",
+             linewidth=1,
+             linetype="dashed") +
+  annotate("text",
+           x=450,
+           y=550,
+           label=paste("Mean =", round(mean(stu_qqq_eda$Science_Score, na.rm = T), 3)),
+           color="black",
+           size=4) +
+  theme_hc() +
+  scale_x_continuous(breaks = seq(100, 1000, 100)) +
+  scale_y_continuous(breaks = seq(0, 550, 100)) +
+  coord_cartesian(xlim = c(100, 1000), ylim = c(0, 550))
+```
+:::
+
+### Changes
+
+**Clarity:**
+
+-   A fixed bin size of 20 was set for all graphs. This is to ensure that the bins per graph are uniform for easier interpretation by viewers.
+
+-   The size of the x axis was set to 100-1000 based off of the lowest and highest values found in all of the datasets. This allows the bins to be consistent in the numbers that they represent and for the differences between each subject's scores to be more evident.
+
+-   The y axis was changed to a scale of 0-550 based off of the highest frequency found in the dataset per bin.
+
+**Aesthetics:**
+
+-   The label for the mean was moved higher to no longer be obscured by the graph.
+
+-   The color of the median was changed into a dark green color to better match the color theme of the website.
+
+-   The gray background has been switched to a white background.
+
+## 3.1: Distribution of Average Score per School
+
+The next graph to observe is that of the box plot representing the distribution of the average scores of the students within each school per subject.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+stu_sch <- stu_qqq_eda %>%
+  group_by(School_ID) %>%
+  mutate(math_avg = mean(Math_Score),
+         science_avg = mean(Science_Score),
+         reading_avg = mean(Reading_Score)) %>%
+  select(School_ID, math_avg, science_avg, reading_avg) %>%
+  unique() 
+
+sch_math <- ggplot(data=stu_sch,
+       aes(y = math_avg)) +
+  geom_boxplot(width=0.1, outlier.colour = "#137a63") +
+  stat_summary(aes(x = 0),
+               geom = "point",       
+               fun.y = "mean",
+               shape = 18,
+               colour = "#ADD0B3", 
+               size = 3.5) +
+  xlim(c(-.1,.1))+
+  scale_x_continuous(NULL, breaks = NULL) +
+  labs(y = "Math Average", title = "")
+
+sch_read <- ggplot(data=stu_sch,
+       aes(y = reading_avg)) +
+  geom_boxplot(width=0.1, outlier.colour = "#137a63") +
+  stat_summary(aes(x = 0),
+               geom = "point",       
+               fun.y = "mean", 
+               shape = 18,
+               colour = "#ADD0B3", 
+               size = 3.5) +
+  xlim(c(-.1,.1))+
+  scale_x_continuous(NULL, breaks = NULL) +
+  labs(y = "Reading Average", title = "")
+
+sch_sci <- ggplot(data=stu_sch,
+       aes(y = science_avg)) +
+  geom_boxplot(width=0.1, outlier.colour = "#137a63") +
+  stat_summary(aes(x = 0),
+               geom = "point",       
+               fun.y = "mean",  
+               shape = 18,
+               colour = "#ADD0B3", 
+               size = 3.5) +
+  xlim(c(-.1,.1)) +
+  scale_x_continuous(NULL, breaks = NULL) +
+  labs(y = "Science Average", title = "")
+
+sch_math + sch_read + sch_sci
+```
+
+### Critique
+
+**Clarity**
+
+-   Similar to the previous graph, given that 3 different subjects are being compared, keeping a similar scale between all the graphs could help in seeing which subjects have the greatest disparities between one another in terms of average student grades.
+
+-   The y-axis label could be improved by specifying that the measurement is per school.
+
+**Aesthetics**
+
+-   The diamond to represent the mean of the data could be darkened to help its visibility to the reader.
+
+-   Similar to the previous graph, the gray background could be switched to match the white background of the website itself.
+
+### Recreation
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+stu_sch <- stu_qqq_eda %>%
+  group_by(School_ID) %>%
+  mutate(math_avg = mean(Math_Score),
+         science_avg = mean(Science_Score),
+         reading_avg = mean(Reading_Score)) %>%
+  select(School_ID, math_avg, science_avg, reading_avg) %>%
+  unique() 
+
+sch_math <- ggplot(data=stu_sch,
+       aes(y = math_avg)) +
+  geom_boxplot(width=0.1, outlier.colour = "#137a63") +
+  stat_summary(aes(x = 0),
+               geom = "point",       
+               fun.y = "mean",
+               shape = 18,
+               colour = "#137a63", 
+               size = 3.5) +
+  xlim(c(-.1,.1))+
+  scale_x_continuous(NULL, breaks = NULL) +
+  labs(y = "Average Student Math Score of School", title = "")+
+  coord_cartesian(ylim = c(300, 750))+
+  theme_hc() 
+
+sch_read <- ggplot(data=stu_sch,
+       aes(y = reading_avg)) +
+  geom_boxplot(width=0.1, outlier.colour = "#137a63") +
+  stat_summary(aes(x = 0),
+               geom = "point",       
+               fun.y = "mean", 
+               shape = 18,
+               colour = "#137a63", 
+               size = 3.5) +
+  xlim(c(-.1,.1))+
+  scale_x_continuous(NULL, breaks = NULL) +
+  labs(y = "Average Student Reading Score of School", title = "")+
+  coord_cartesian(ylim = c(300, 750))+
+  theme_hc() 
+
+sch_sci <- ggplot(data=stu_sch,
+       aes(y = science_avg)) +
+  geom_boxplot(width=0.1, outlier.colour = "#137a63") +
+  stat_summary(aes(x = 0),
+               geom = "point",       
+               fun.y = "mean",  
+               shape = 18,
+               colour = "#137a63", 
+               size = 3.5) +
+  xlim(c(-.1,.1)) +
+  scale_x_continuous(NULL, breaks = NULL) +
+  labs(y = "Average Student Science Score of School", title = "")+
+  coord_cartesian(ylim = c(300, 750))+
+  theme_hc() 
+
+sch_math + sch_read + sch_sci
+```
+
+### Changes
+
+**Clarity**
+
+-   The x and y scales were adjusted to be uniform and based on the highest and lowest values found for each axis from the data.
+
+-   The y-axis label clarifies that the score is per school.
+
+**Aesthetics**
+
+-   The diamond to represent the mean of the data has been darkened to help its visibility to the reader.
+
+-   The gray background has been switched to a white background.
+
+## 3.3 Differences in Student Performance Among Genders
+
+The following graph is meant to show the differences between subject performance between the genders of the students.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+gender_math <- ggplot(data = stu_qqq_eda,
+       aes(x = Gender,
+           y = Math_Score)) +
+  geom_boxplot(color="grey50",
+               fill="#ADD0B3") +
+  geom_point(stat="summary",        
+             fun.y="mean",           
+             colour ="#137a63",          
+             size=3) +
+  ylim(0,1000) +
+  labs(x = "", y = "Score", title = "Mathematics", axis.title.y = element_blank())
+
+gender_read <- ggplot(data = stu_qqq_eda,
+       aes(x = Gender,
+           y = Reading_Score)) +
+  geom_boxplot(color="grey50",
+               fill="#ADD0B3") +
+  geom_point(stat="summary",        
+             fun.y="mean",           
+             colour ="#137a63",          
+             size=3) +
+  ylim(0,1000) +
+  labs(x = "", title = "Reading") +
+  theme(axis.text.y = element_blank(), axis.title.y = element_blank())
+
+gender_sci <- ggplot(data = stu_qqq_eda,
+       aes(x = Gender,
+           y = Science_Score)) +
+  geom_boxplot(color="grey50",
+               fill="#ADD0B3") +
+  geom_point(stat="summary",        
+             fun.y="mean",           
+             colour ="#137a63",          
+             size=3) +
+  ylim(0,1000) +
+  labs(x = "", title = "Science") +
+  theme(axis.text.y = element_blank(), axis.title.y = element_blank())
+
+gender_math + gender_read + gender_sci
+```
+
+### Critique
+
+**Clarity**
+
+-   Looking at the size of the graphs, a closer view of the ranges could be done by decreasing the y range of the graphs from 0-1000 to 100-1000. This allows the shapes of the box plots to be more pronounced in order to show the differences between scores.
+
+-   Given that male and female students are being compared, adding a notch to the box plots would allow for a clearer observation of significant differences between the genders by showing the 95% confidence interval between the genders.
+
+**Aesthetics**
+
+-   Given that the previous graph was also a box plot, the sudden inclusion of filling the graph in with the color green is inconsistent with the previous style of the box plot.
+
+-   The change of the colors for outliers and the mean compared to the last graph is also inconsistent with the pre-established format.
+
+### Recreation
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+gender_math <- ggplot(data = stu_qqq_eda,
+       aes(x = Gender,
+           y = Math_Score)) +
+  geom_boxplot(outlier.colour = "#137a63",
+               notch=TRUE) +
+  geom_point(stat="summary",        
+             fun.y="mean",
+             shape = 18,
+             colour ="#137a63",          
+             size=3) +
+  coord_cartesian(ylim = c(100, 1000))+
+  labs(x = "", y = "Score", title = "Mathematics", axis.title.y = element_blank())+
+  theme_hc()+
+  scale_y_continuous(breaks = seq(100, 1000, by = 100))
+
+gender_read <- ggplot(data = stu_qqq_eda,
+       aes(x = Gender,
+           y = Reading_Score)) +
+  geom_boxplot(outlier.colour = "#137a63",
+               notch=TRUE) +
+  geom_point(stat="summary",        
+             fun.y="mean",
+             shape = 18,
+             colour ="#137a63",          
+             size=3) +
+  coord_cartesian(ylim = c(100, 1000))+
+  labs(x = "", title = "Reading") +
+  theme(axis.text.y = element_blank(), axis.title.y = element_blank())+
+  theme_hc()+
+  scale_y_continuous(breaks = seq(100, 1000, by = 100))
+
+gender_sci <- ggplot(data = stu_qqq_eda,
+       aes(x = Gender,
+           y = Science_Score)) +
+  geom_boxplot(outlier.colour = "#137a63",
+               notch=TRUE) +
+  geom_point(stat="summary",        
+             fun.y="mean",
+             shape = 18,
+             colour ="#137a63",          
+             size=3) +
+  coord_cartesian(ylim = c(100, 1000))+
+  labs(x = "", title = "Science") +
+  theme(axis.text.y = element_blank(), axis.title.y = element_blank())+
+  theme_hc()+
+  scale_y_continuous(breaks = seq(100, 1000, by = 100))
+
+gender_math + gender_read + gender_sci
+```
+
+### Changes
+
+**Clarity**
+
+-   The y range of the graphs has been changed from 0-1000 to 100-1000. This allows the shapes of the box plots to be more pronounced in order to show the differences between scores.
+
+-   A notch to the box plots was added to show the 95% confidence interval between the genders.
+
+**Aesthetics**
+
+-   The green fill of the box plot was removed to maintain uniformity with the previous box plot.
+
+-   The colors of the outliers has been changed to match the previous box plot.
+
+-   The color and shape of the mean has been changed to match the previous box plot.
+
+-   The gray background has been changed to match the website's background.
+
+## 3.4 Socioeconomic Status
+
+The following graph shows the correlation between a student's Socioeconomic Status and their grades.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+cor1 <- round(cor(stu_qqq_socio$Math_Score, stu_qqq_socio$Socioeconomic_Stat),2)
+cor2 <- round(cor(stu_qqq_socio$Reading_Score, stu_qqq_socio$Socioeconomic_Stat),2)
+cor3 <- round(cor(stu_qqq_socio$Science_Score, stu_qqq_socio$Socioeconomic_Stat),2)
+
+p1 <- ggplot(data = stu_qqq_socio,
+             aes(y = Math_Score, x = Socioeconomic_Stat)) +
+  geom_point(size = 0.1, color = "#137a63") +
+  geom_smooth(method = lm, color = "black") +
+  annotate("text", x = -2, y = 800, label = paste0("r = ", cor1), color = 'black')
+
+p2 <- ggplot(data = stu_qqq_socio,
+       aes(y = Reading_Score, x = Socioeconomic_Stat)) +
+  geom_point(size = 0.1, color = "#137a63")+
+  geom_smooth(method = lm, color = "black") + 
+  annotate("text", x = -2, y = 800, label = paste0("r = ", cor2), color = 'black')
+
+p3 <- ggplot(data = stu_qqq_socio,
+       aes(y = Science_Score, x = Socioeconomic_Stat)) +
+  geom_point(size = 0.1, color = "#137a63")+
+  geom_smooth(method = lm, color = "black") +
+  annotate("text", x = -2, y = 800, label = paste0("r = ", cor3), color = 'black')
+
+p1/p2/p3
+```
+
+### Critique
+
+**Clarity**
+
+-   Observing the graphs, the compression of the values into a very narrow space exaggerates the correlation of the student's socioeconomic status and their grades. The r value is at 0.41-0.42 and yet the graphs show a very clear upward trend. Enlarging the space for the y-axis should provide the viewer with a clearer understanding of the correlation.
+
+-   The scales of the 3 graphs are also inconsistent. Adding a uniform scale could help in comparing the data from one to the other.
+
+-   A title to the graphs could be added to make the information being presented clearer.
+
+**Aesthetics**
+
+-   The labels of the x and y axis contain underscores, these could be removed.
+
+-   The gray background could be changed to match the website's white background.
+
+### Recreation
+
+::: panel-tabset
+#### Math
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+ggplot(data = stu_qqq_socio,
+             aes(y = Math_Score, x = Socioeconomic_Stat)) +
+  geom_point(size = 0.1, color = "#137a63") +
+  geom_smooth(method = lm, color = "black") +
+  annotate("text", x = -2, y = 800, label = paste0("r = ", cor1), color = 'black')+
+  labs(x = "Socioeconomic Score", y = "Math Score")+
+  ggtitle("Math Score by Socioeconomic Status") +
+  theme_hc() +
+  coord_cartesian(ylim = c(100, 900)) +
+  scale_y_continuous(breaks = seq(100, 900, by = 100))
+```
+
+#### **Reading**
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+ggplot(data = stu_qqq_socio,
+       aes(y = Reading_Score, x = Socioeconomic_Stat)) +
+  geom_point(size = 0.1, color = "#137a63")+
+  geom_smooth(method = lm, color = "black") + 
+  annotate("text", x = -2, y = 800, label = paste0("r = ", cor2), color = 'black')+
+  labs(x = "Socioeconomic Score", y = "Math Score")+
+  ggtitle("Reading Score by Socioeconomic Status") +
+  theme_hc() +
+  coord_cartesian(ylim = c(100, 900)) +
+  scale_y_continuous(breaks = seq(100, 900, by = 100))
+```
+
+#### **Science**
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+ggplot(data = stu_qqq_socio,
+       aes(y = Science_Score, x = Socioeconomic_Stat)) +
+  geom_point(size = 0.1, color = "#137a63")+
+  geom_smooth(method = lm, color = "black") +
+  annotate("text", x = -2, y = 800, label = paste0("r = ", cor3), color = 'black')+
+  labs(x = "Socioeconomic Score", y = "Math Score")+
+  ggtitle("Science Score by Socioeconomic Status") +
+  theme_hc() +
+  coord_cartesian(ylim = c(100, 900)) +
+  scale_y_continuous(breaks = seq(100, 900, by = 100))
+
+```
+:::
+
+### Changes
+
+**Clarity**
+
+-   The graphs has been split into 3 tabs to allow each graph to clearly show the spread of the points.
+
+-   The graph scales have all been made uniform to help see differences between one graph to the other.
+
+-   A title to the graphs has been added to make the information being presented clearer.
+
+**Aesthetics**
+
+-   The labels of the x and y axis have been changed.
+
+-   The gray background was changed to match the website's white background.
+
+# 4: Learning Points
+
+This exercise has been a great opportunity to reflect on the first take-home exercise. Having viewed my classmate's work, although I did provide critiques, I have noticed attributes of their graphs that I could adopt into my own graphs. I have also come to realize the following:
+
+-   Every person has their own style. Despite being given the same data, my classmate and I have chosen to represent some of the data in very different styles. Neither option is necessarily better than the other but it is clear through the chosen styles as to what our objectives were and what we wanted to highlight in the data.
+
+-   Visualization is a continuous journey. There is no such thing as making the "prefect graph." It is only a matter of continuously improving your own style and learning from others.
