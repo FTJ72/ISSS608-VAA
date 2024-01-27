@@ -8,6 +8,8 @@ execute:
 
 # 1: Overview
 
+This take-home exercise is meant to be a practice of peer review. The task is to critique a submission made by a classmate by giving comments on its clarity and aesthetics. The design is then to be remade using the comments made in order to create a new graph that addresses the concerns raised.
+
 # 2: Data Preparation
 
 As the purpose of this exercise is to critique the clarity, and aesthetics of the author's graphs, the same steps used by the author for data preparation have been listed below. No new steps will be taken as this is outside the scope of the exercise.
