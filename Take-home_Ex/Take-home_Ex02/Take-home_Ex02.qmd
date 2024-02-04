@@ -8,7 +8,7 @@ execute:
 
 # 1: Overview
 
-This take-home exercise is meant to be a practice of peer review. The task is to critique a submission made by a classmate by giving comments on its clarity and aesthetics. The design is then to be remade using the comments made in order to create a new graph that addresses the concerns raised.
+This take-home exercise is meant to be a practice of peer review. The task is to critique a submission made by a classmate by giving comments on the clarity and aesthetics of their graphs. The design is then to be remade using the comments made in order to create a new graph that addresses the concerns raised.
 
 # 2: Data Preparation
 
