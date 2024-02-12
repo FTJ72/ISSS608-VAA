@@ -1,0 +1,88 @@
+---
+title: "Take-home Exercise 3: Be Weatherwise or Otherwise"
+execute:
+  eval: true
+  echo: true
+  warning: false
+---
+
+# I. Overview
+
+# II. Data Preparation
+
+## Installing R Packages
+
+For this exercise, the following packages will be required to create useful visualizations of the data.
+
+-   
+
+```{r}
+pacman::p_load(readxl, ggiraph, plotly, 
+               patchwork, DT, tidyverse, gifski, gapminder, gganimate, ggplot2) 
+```
+
+## Data Sets
+
+There are 5 data sets for this exercise, all of which are downloaded from the from [Meteorological Service Singapore](http://www.weather.gov.sg/home/) website. The data to be used is the mean temperature of the Changi region of Singapore during September in the years 1983, 1993, 2003, 2013, and 2023.
+
+For the exercise at hand, the data has been merged into 1 data set which contains the average temperatures for each day of the month in the 5 years in question.
+
+```{r}
+Temps <- read.csv("data/ChangiTemps.csv")
+```
+
+```{r}
+ggplot(Temps, aes(x = Temps[[4]], y = Temps[[9]])) +
+  geom_point(alpha = 0.7,
+             show.legend = FALSE) +
+  scale_size(range = c(2, 12)) +
+  labs(title = 'Year: {frame_time}', 
+       x = 'Day', 
+       y = 'Mean Temperature (°C)') +
+  transition_time(Year) + 
+  ease_aes('linear')
+
+```
+
+```{r}
+gg <- ggplot(Temps, 
+       aes(x = Temps[[4]], 
+           y = Temps[[9]])) +
+  geom_point(aes(frame = Year),
+             alpha = 0.7, 
+             show.legend = FALSE) +
+  scale_size(range = c(2, 12)) +
+  labs(x = 'Day', 
+       y = 'Mean Temperature (°C)')
+ggplotly(gg)
+```
+
+```{r}
+p <- ggplot(data=Temps,
+            aes(x = Temps[[9]])) +
+  geom_dotplot_interactive(
+    aes(tooltip = Year,  # Specify the tooltip to show the year
+        data_id = Year),  # Specify the data_id to use the year for identification
+    stackgroups = TRUE,
+    binwidth = 0.2,
+    method = "histodot") +
+  scale_y_continuous(NULL,
+                     breaks = NULL)
+girafe(
+  ggobj = p,
+  width_svg = 10,
+  height_svg = 10*0.618,
+  options = list(
+    opts_hover(css = "fill: #202020;"),
+    opts_hover_inv(css = "opacity:0.2;")
+  )
+)
+
+```
+
+```{r}
+plot_ly(data = Temps, 
+        x = ~Day, 
+        y = Temps[[9]], 
+        color = ~Year)
+```
