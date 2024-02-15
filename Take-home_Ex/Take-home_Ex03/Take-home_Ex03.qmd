@@ -18,17 +18,25 @@ For this exercise, the following packages will be required to create useful visu
 
 ```{r}
 pacman::p_load(readxl, ggiraph, plotly, 
-               patchwork, DT, tidyverse, gifski, gapminder, gganimate, ggplot2) 
+               patchwork, DT, tidyverse, gifski, gapminder, gganimate, ggplot2, dplyr) 
 ```
 
 ## Data Sets
 
-There are 5 data sets for this exercise, all of which are downloaded from the from [Meteorological Service Singapore](http://www.weather.gov.sg/home/) website. The data to be used is the mean temperature of the Changi region of Singapore during September in the years 1983, 1993, 2003, 2013, and 2023.
+There are 5 data sets for this exercise, all of which are downloaded from the from [Meteorological Service Singapore](http://www.weather.gov.sg/home/) website. The data to be used is the mean temperature of the Changi region of Singapore during September in the Years 1983, 1993, 2003, 2013, and 2023.
 
-For the exercise at hand, the data has been merged into 1 data set which contains the average temperatures for each day of the month in the 5 years in question.
+For the exercise at hand, the data has been merged into 1 data set which contains the average temperatures for each day of the month in the 5 Years in question.
 
 ```{r}
 Temps <- read.csv("data/ChangiTemps.csv")
+
+Temps$Year <- as.factor(Temps$Year)
+
+average_temps <- Temps %>%
+  group_by(Year) %>%
+  summarize(AvgTemp = mean(MeanTemp, na.rm = TRUE))
+
+Temps$Year <- as.integer(as.character(Temps$Year))
 ```
 
 ```{r}
@@ -41,48 +49,59 @@ ggplot(Temps, aes(x = Temps[[4]], y = Temps[[9]])) +
        y = 'Mean Temperature (°C)') +
   transition_time(Year) + 
   ease_aes('linear')
-
 ```
 
 ```{r}
 gg <- ggplot(Temps, 
-       aes(x = Temps[[4]], 
-           y = Temps[[9]])) +
-  geom_point(aes(frame = Year),
+       aes(x = DayOfMonth, 
+           y = MeanTemp)) +
+  geom_point(aes(frame = Year,text = paste("Day:", DayOfMonth, "<br>Mean Temperature (°C):", MeanTemp),
+                 color = MeanTemp),
              alpha = 0.7, 
              show.legend = FALSE) +
   scale_size(range = c(2, 12)) +
+  scale_color_gradient(low = "navy", high = "red") +
   labs(x = 'Day', 
        y = 'Mean Temperature (°C)')
-ggplotly(gg)
+ggplotly(gg, tooltip = c("text"))
 ```
 
 ```{r}
-p <- ggplot(data=Temps,
-            aes(x = Temps[[9]])) +
+Temps$Year <- as.factor(Temps$Year)
+
+p <- ggplot(data = Temps,
+            aes(x = MeanTemp)) +
   geom_dotplot_interactive(
-    aes(tooltip = Year,  # Specify the tooltip to show the year
-        data_id = Year),  # Specify the data_id to use the year for identification
+    aes(tooltip = Year, 
+        data_id = Year),  
     stackgroups = TRUE,
-    binwidth = 0.2,
+    binwidth = 0.1,
     method = "histodot") +
   scale_y_continuous(NULL,
-                     breaks = NULL)
+                     breaks = NULL)+
+  labs(x = 'Mean Temperature (°C)')
+
 girafe(
   ggobj = p,
   width_svg = 10,
-  height_svg = 10*0.618,
-  options = list(
-    opts_hover(css = "fill: #202020;"),
+  height_svg = 10 * 0.25,
+  options = list(                        
+    opts_hover(css = "fill: #202020;"),  
     opts_hover_inv(css = "opacity:0.2;")
-  )
-)
+  ))
+
+Temps$Year <- as.integer(as.character(Temps$Year))
 
 ```
 
 ```{r}
+Temps$Year <- as.factor(Temps$Year)
+
 plot_ly(data = Temps, 
-        x = ~Day, 
-        y = Temps[[9]], 
-        color = ~Year)
+        x = ~DayOfMonth, 
+        y = ~MeanTemp, 
+        color = ~Year, 
+        colors = c("#17becf", "#2ca02c", "#e377c2", "#ff7f0e", "#d62728"))
+
+Temps$Year <- as.integer(as.character(Temps$Year))
 ```
