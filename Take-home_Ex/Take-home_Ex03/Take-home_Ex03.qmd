@@ -8,100 +8,143 @@ execute:
 
 # I. Overview
 
+Climate change is a pressing topic in modern society. Given this, various reports have shown that the daily mean temperature is predicted to increase by 1.4 to 4.6 °C. With this the researcher has been encouraged to use visual interactivity to validate these said claims.
+
 # II. Data Preparation
 
 ## Installing R Packages
 
 For this exercise, the following packages will be required to create useful visualizations of the data.
 
--   
+-   [tidyverse](https://www.tidyverse.org) - A collection of packages for data manipulation and visualization.
+
+-   [readr](https://readr.tidyverse.org) - Provides functions to read csv files.
+
+-   [ggplot2](https://ggplot2.tidyverse.org) - A package used for data visualization and plot creation.
+
+-   [gganimate](https://gganimate.com) - A package used to animate plots made by ggplot2
+
+-   [plotly](https://plotly.com) - A package used for creating interactive plots made by ggplot2.
+
+-   [ggthemes](https://ggplot2.tidyverse.org/reference/ggtheme.html) - A package that provides a variety of themes to improve the appearance of graphs.
 
 ```{r}
-pacman::p_load(readxl, ggiraph, plotly, 
-               patchwork, DT, tidyverse, gifski, gapminder, gganimate, ggplot2, dplyr) 
+pacman::p_load(tidyverse, readr, ggplot2, gganimate, plotly, hrbrthemes, ggthemes) 
 ```
 
 ## Data Sets
 
-There are 5 data sets for this exercise, all of which are downloaded from the from [Meteorological Service Singapore](http://www.weather.gov.sg/home/) website. The data to be used is the mean temperature of the Changi region of Singapore during September in the Years 1983, 1993, 2003, 2013, and 2023.
-
-For the exercise at hand, the data has been merged into 1 data set which contains the average temperatures for each day of the month in the 5 Years in question.
+There are 5 data sets for this exercise, all of which are downloaded from the from [Meteorological Service Singapore](http://www.weather.gov.sg/home/) website. The data to be used is the mean temperature of the Changi region of Singapore during September in the Years 1983, 1993, 2003, 2013, and 2023. The data is loaded using the code below.
 
 ```{r}
-Temps <- read.csv("data/ChangiTemps.csv")
+temp1983 <- read_csv("data/Changi_Sep1983.csv", locale = locale(encoding = "latin1"))
+temp1993 <- read_csv("data/Changi_Sep1993.csv", locale = locale(encoding = "latin1"))
+temp2003 <- read_csv("data/Changi_Sep2003.csv", locale = locale(encoding = "latin1"))
+temp2013 <- read_csv("data/Changi_Sep2013.csv", locale = locale(encoding = "latin1"))
+temp2023 <- read_csv("data/Changi_Sep2023.csv")
+```
 
+## Data Wrangling
+
+The data must then be put together into 1 data set called "Temps." For the sake of simplicity, the data set is also reduced to only contain the relevant columns for the purpose of the exercise. The column containing the mean temperature is also renamed to "MeanTemp" for easier use of the data set.
+
+```{r}
+Temps <- bind_rows(temp1983, temp1993, temp2003, temp2013, temp2023)
+Temps <- Temps %>%
+  rename(MeanTemp = `Mean Temperature (°C)`)
+Temps <- Temps %>%
+  select(Year, Day, MeanTemp)
+```
+
+Finally, the average temperature per year is obtained and added to the data set as a new column labelled as "MonthAvg."
+
+```{r}
 Temps$Year <- as.factor(Temps$Year)
 
 average_temps <- Temps %>%
   group_by(Year) %>%
-  summarize(AvgTemp = mean(MeanTemp, na.rm = TRUE))
+  summarize(MonthAvg = mean(MeanTemp, na.rm = TRUE))
+
+Temps <- left_join(Temps, average_temps, by = "Year")
 
 Temps$Year <- as.integer(as.character(Temps$Year))
+Temps$MonthAvg <- round(Temps$MonthAvg, 1)
+Temps
 ```
 
+The resulting data set can be seen as above containing 4 columns, Year, Day, MeanTemp, and MonthAvg.
+
+# III. Interactive Data Visualization
+
+## Visualization
+
+As the goal of the visualization is to showcase the change in temperature, the ideal way to showcase this is to show the mean temperature per year and clearly show how it is rising and/or falling. The data points per day can also be shown to further support the upward/downward movement of the temperature. Given that this is the goal, a dot plot appears to be the optimal manner in which to show this phenomenon.
+
+A rough idea of the visualization can be seen in the animation below.
+
 ```{r}
-ggplot(Temps, aes(x = Temps[[4]], y = Temps[[9]])) +
+#| code-fold: true
+#| code-summary: "Show code"
+ggplot(Temps, aes(x = Day, y = MeanTemp)) +
   geom_point(alpha = 0.7,
              show.legend = FALSE) +
+  geom_line(data = Temps,
+            aes(x = Day, y = MonthAvg),
+            color = "red") +
   scale_size(range = c(2, 12)) +
   labs(title = 'Year: {frame_time}', 
        x = 'Day', 
        y = 'Mean Temperature (°C)') +
   transition_time(Year) + 
-  ease_aes('linear')
+  ease_aes('linear') +
+  theme(legend.position = "right") +
+  guides(color = guide_legend(title = "Average Temperature", override.aes = list(color = "red", linetype = "dashed")))+
+  theme_hc()
 ```
 
+As can be seen in the animation, the data points are shown to rise/fall depending on the year. There is also a line present throughout the graph that showcases the mean temperature of the time period which shows the rise/fall of the mean temperature.
+
+## Interactivity
+
+Given the 5 years available, a slider is the best tool to utilize when looking through the years. A slider emphasizes a sense of time passing for the viewer given the linear appearance of the tool. In addition to this, a slider, unlike the gif, will allow viewers to pick between specific time periods of their choice rather than having to wait for the gif to loop to the desired time frame. Most importantly, the movement of the slider when moving between each year will allow the viewer to easily see the overall movement of the data points as well as the mean temperature.
+
 ```{r}
+#| code-fold: true
+#| code-summary: "Show code"
 gg <- ggplot(Temps, 
-       aes(x = DayOfMonth, 
+       aes(x = Day, 
            y = MeanTemp)) +
-  geom_point(aes(frame = Year,text = paste("Day:", DayOfMonth, "<br>Mean Temperature (°C):", MeanTemp),
+  geom_point(aes(frame = Year, 
+                 text = paste("Day:", Day, "<br>Mean Temperature (°C):", MeanTemp),
                  color = MeanTemp),
              alpha = 0.7, 
              show.legend = FALSE) +
+  geom_line(aes(x = Day, y = MonthAvg,
+                group = Year,
+                frame = Year,
+                text = paste("Average Temperature:", MonthAvg)),
+            color = "black",
+            linetype = "dashed") +
   scale_size(range = c(2, 12)) +
   scale_color_gradient(low = "navy", high = "red") +
   labs(x = 'Day', 
-       y = 'Mean Temperature (°C)')
+       y = 'Mean Temperature (°C)')+
+  theme_hc()
 ggplotly(gg, tooltip = c("text"))
 ```
 
-```{r}
-Temps$Year <- as.factor(Temps$Year)
+In creating this interactive visualization, some important items were implemented.
 
-p <- ggplot(data = Temps,
-            aes(x = MeanTemp)) +
-  geom_dotplot_interactive(
-    aes(tooltip = Year, 
-        data_id = Year),  
-    stackgroups = TRUE,
-    binwidth = 0.1,
-    method = "histodot") +
-  scale_y_continuous(NULL,
-                     breaks = NULL)+
-  labs(x = 'Mean Temperature (°C)')
+-   Color was utilized to further highlight temperature shifts in the data set as the 5°C shifts in temperature throughout the years may not appear to be large at face value.
 
-girafe(
-  ggobj = p,
-  width_svg = 10,
-  height_svg = 10 * 0.25,
-  options = list(                        
-    opts_hover(css = "fill: #202020;"),  
-    opts_hover_inv(css = "opacity:0.2;")
-  ))
+-   The monthly mean temperature line allows viewers to easily compare the differences between each year's overall temperature. Without this line, the temperature shifts between certain years may be difficult to determine.
 
-Temps$Year <- as.integer(as.character(Temps$Year))
+-   When hovering the cursor over a data point, the exact measurement and day is given to allow the graph to be easier to read.
 
-```
+-   When hovering the cursor over the dashed line, the average temperature for the year is given to allow the graph to be easier to read.
 
-```{r}
-Temps$Year <- as.factor(Temps$Year)
+-   A clearer theme was used for the graph to improve the appearance of the graph.
 
-plot_ly(data = Temps, 
-        x = ~DayOfMonth, 
-        y = ~MeanTemp, 
-        color = ~Year, 
-        colors = c("#17becf", "#2ca02c", "#e377c2", "#ff7f0e", "#d62728"))
+# Conclusion
 
-Temps$Year <- as.integer(as.character(Temps$Year))
-```
+While ordinary visualization proves itself to be extremely useful in everyday contexts, Interactivity adds a new dimension of analysis to the process. By adding interaction, users are given the ability to analyze the data in a more active manner by choosing what data points they seek to compare. Interactivity turns the process of viewing graphs from a passive action to an active one where users are encouraged to analyze the data for themselves and look further into graphs.
