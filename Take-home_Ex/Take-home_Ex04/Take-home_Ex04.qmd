@@ -121,7 +121,8 @@ heatmap_plot <- plot_ly(heatmap_data,
                         type = "heatmap", 
                         colorscale = list(c(0, "rgb(255,255,255)"),
                                           c(1, "rgb(0,0,128)")), 
-                        text = ~paste("Average Rainfall: ", round(avg_rainfall, 2), "<br>Most Rainfall Observed: ", max_rainfall)) %>%
+                        text = ~paste("Average Rainfall: ", round(avg_rainfall, 2), "<br>Most Rainfall Observed: ", max_rainfall),
+                        hoverinfo = "text") %>%
   layout(title = "Average Daily Rainfall per Month per Year",
          xaxis = list(title = "Month"),
          yaxis = list(title = "Year"),
