@@ -1,0 +1,202 @@
+---
+title: "Take Home Exercise 4: Prototyping Modules for Visual Analytics Shiny Application"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  freeze: true
+  message: false
+---
+
+# Overview
+
+With the rising concerns regarding climate change, various factors such as rising temperatures, rainfall, and wind speeds have been
+
+```{r}
+pacman::p_load(tidyverse, ggplot2, ggthemes, ggpubr, forecast, ggiraph, girafe)
+```
+
+```{r}
+weatherdata <- read_rds("data/weatherdata.rds")
+```
+
+```{r}
+summary(weatherdata)
+```
+
+```{r}
+correlation <- cor(weatherdata$Rainfall, weatherdata$MeanTemp, use = "complete.obs")
+
+gg <- ggplot(data = weatherdata,
+       aes(x=Rainfall, y=MeanTemp))+
+  geom_point()+
+  geom_smooth(method=lm,
+              size=0.5)+
+  ggtitle("Mean Temperature by Rainfall") +
+  theme_hc() +
+  coord_cartesian(ylim = c(20, 32)) +
+  scale_y_continuous(breaks = seq(20, 32, by = 2))
+
+gg <- gg + annotate("text", x = Inf, y = Inf, 
+                    label = paste("Correlation:", round(correlation, 4)), 
+                    hjust = 1, vjust = 1, size = 5)
+
+print(gg)
+```
+
+```{r}
+correlation <- cor(weatherdata$Rainfall, weatherdata$MeanWind, use = "complete.obs")
+
+gg <- ggplot(data = weatherdata,
+       aes(x=Rainfall, y=MeanWind))+
+  geom_point()+
+  geom_smooth(method=lm,
+              size=0.5)+
+  ggtitle("Mean Wind Speed by Rainfall") +
+  theme_hc() +
+  coord_cartesian(ylim = c(0, 32)) +
+  scale_y_continuous(breaks = seq(0, 32, by = 2))
+
+gg <- gg + annotate("text", x = Inf, y = Inf, 
+                    label = paste("Correlation:", round(correlation, 4)), 
+                    hjust = 1, vjust = 1, size = 5)
+
+print(gg)
+```
+
+```{r}
+p1 <- ggplot(data = weatherdata,
+       aes(y=Rainfall,x=Year))+
+  geom_boxplot()+
+  theme_hc()
+p1 %>%
+  ggplotly()%>%
+  layout(boxmode = "group")
+```
+
+```{r}
+p1 <- ggplot(data = weatherdata,
+             aes(y = Rainfall, x = Year)) +
+  geom_boxplot()+
+  theme_hc()+
+  scale_y_continuous(breaks = seq(0, 20, by = 2))
+
+p1 <- ggplotly(p1) %>%
+  layout(boxmode = "group", yaxis = list(range = c(0, 21)))
+
+p1
+```
+
+```{r}
+p1 <- ggplot(data = weatherdata,
+       aes(y=Rainfall,x=Station))+
+  geom_boxplot()+
+  theme_hc()
+p1 %>%
+  ggplotly()%>%
+  layout(boxmode = "group")
+```
+
+```{r}
+p1 <- ggplot(data = weatherdata,
+             aes(y = Rainfall, x = Station)) +
+  geom_boxplot()+
+  theme_hc()+
+  scale_y_continuous(breaks = seq(0, 20, by = 2))
+
+p1 <- ggplotly(p1) %>%
+  layout(boxmode = "group", yaxis = list(range = c(0, 21)))
+
+p1
+```
+
+```{r}
+weatherdata$MonthFactor <- factor(weatherdata$Month, levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"))
+
+
+p1 <- ggplot(data = weatherdata,
+       aes(y=Rainfall,x=MonthFactor))+
+  geom_boxplot()+
+  theme_hc()
+p1 %>%
+  ggplotly()%>%
+  layout(boxmode = "group")
+```
+
+```{r}
+p1 <- ggplot(data = weatherdata,
+             aes(y = Rainfall, x = MonthFactor)) +
+  geom_boxplot()+
+  theme_hc()+
+  scale_y_continuous(breaks = seq(0, 30, by = 2))
+
+p1 <- ggplotly(p1) %>%
+  layout(boxmode = "group", yaxis = list(range = c(0, 31)))
+
+p1
+```
+
+```{r}
+p <- ggplot(data = weatherdata, aes(x = Rainfall)) +
+  geom_histogram(binwidth = 5, fill = "skyblue", color = "black") +
+  labs(title = "Distribution of Rainfall", x = "Rainfall", y = "Frequency") +
+  theme_minimal()
+
+ggplotly(p)
+```
+
+```{r}
+weatherdata$Date <- as.Date(paste(weatherdata$Year, weatherdata$Month, weatherdata$Day, sep = "-"))
+```
+
+```{r}
+view(weatherdata)
+```
+
+```{r}
+AvgRainPerMonth <- weatherdata %>%
+  group_by(Year, Month) %>%
+  summarise(AvgRainfall = mean(Rainfall, na.rm = TRUE))
+
+# Print the new table
+print(AvgRainPerMonth)
+```
+
+```{r}
+AvgRainPerMonth$Month <- factor(AvgRainPerMonth$Month, levels = 1:12,
+                                labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"))
+
+# Create a time series object
+ts_data <- ts(AvgRainPerMonth$AvgRainfall, start = c(2013, 1), frequency = 12)
+
+# Visualize the time series
+autoplot(ts_data) + xlab("Year") + ylab("Average Rainfall")
+
+# Fit an ARIMA model
+arima_model <- auto.arima(ts_data)
+```
+
+```{r}
+# Forecast the next 3 years
+forecast_result <- forecast(arima_model, h = 36)  # 3 years = 36 months
+
+# Print the forecast
+print(forecast_result)
+```
+
+```{r}
+plot(forecast_result)
+```
+
+![](images/WhatsApp%20Image%202024-03-09%20at%209.54.40%20AM.jpeg)
+
+The RShiny app will have 3 sections, Exploratory Data Analysis, Confirmatory Data Analysis, and Predictive Modeling. Each section will have the respective analysis relevant to the header.
+
+On the sidebar, 3 options will be available to customize the graphs.
+
+-   Category - The 3 variables will be the Average Wind, Average Temperature, and Average Rainfall.
+
+-   Year - The user will have an option to specify a range of years in which they want to visualize the data.
+
+-   Location - The user can specify which of the 4 stations' data they want to view, the option to see the data for all of the stations will also be available to them.
